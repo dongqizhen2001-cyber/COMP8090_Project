@@ -1,51 +1,85 @@
-# Task 2: Self-study Heap Sort
-# 堆排序完整实现 (Heap Sort Implementation)
+# Task 2: Advanced Heap Data Structure & Heap Sort Application
+# 包含了堆数据结构 (Heap Data Structure) 和 堆排序算法 (Heap Sort) 的实际应用案例
 
-def heapify(arr, n, i):
-    """
-    维护最大堆的性质 (Maintain max heap property)
-    """
-    largest = i        # 初始化最大元素为父节点
-    left = 2 * i + 1   # 左子节点的索引
-    right = 2 * i + 2  # 右子节点的索引
+# 1. 定义一个实际的应用对象：打印任务
+class PrintJob:
+    def __init__(self, job_name, priority):
+        self.job_name = job_name
+        self.priority = priority # 优先级数字越大，越先处理
 
-    # 如果左子节点存在，且大于当前最大元素
-    if left < n and arr[left] > arr[largest]:
-        largest = left
+    def __repr__(self):
+        return f"[{self.priority}] {self.job_name}"
 
-    # 如果右子节点存在，且大于当前最大元素
-    if right < n and arr[right] > arr[largest]:
-        largest = right
+# 2. 实现核心数据结构：最大堆 (Max Heap)
+class MaxHeap:
+    def __init__(self):
+        self.heap = []
 
-    # 如果最大元素不是父节点，说明需要交换
-    if largest != i:
-        arr[i], arr[largest] = arr[largest], arr[i] # 交换位置
-        # 递归地对受影响的子树进行堆化
-        heapify(arr, n, largest)
+    def parent(self, i): return (i - 1) // 2
+    def left_child(self, i): return 2 * i + 1
+    def right_child(self, i): return 2 * i + 2
 
-def heap_sort(arr):
-    """
-    堆排序主函数 (Main function for Heap Sort)
-    """
-    n = len(arr)
+    # 插入新任务 (对应堆化上浮)
+    def insert(self, job):
+        self.heap.append(job)
+        self._heapify_up(len(self.heap) - 1)
 
-    # 1. 构建最大堆 (Build a maxheap)
-    # 从最后一个非叶子节点开始，倒序遍历进行堆化
-    for i in range(n // 2 - 1, -1, -1):
-        heapify(arr, n, i)
+    def _heapify_up(self, i):
+        while i > 0 and self.heap[self.parent(i)].priority < self.heap[i].priority:
+            # 如果父节点的优先级小于当前节点，交换它们
+            self.heap[i], self.heap[self.parent(i)] = self.heap[self.parent(i)], self.heap[i]
+            i = self.parent(i)
 
-    # 2. 一个个提取元素 (Extract elements one by one)
-    for i in range(n - 1, 0, -1):
-        # 将当前最大的元素（根节点）移到数组末尾
-        arr[i], arr[0] = arr[0], arr[i]
-        # 对剩下的元素重新进行堆化（排除已经排好序的最后一个元素）
-        heapify(arr, i, 0)
+    # 提取最高优先级任务 (对应堆排序的核心逻辑和下沉)
+    def extract_max(self):
+        if len(self.heap) == 0:
+            return None
+        if len(self.heap) == 1:
+            return self.heap.pop()
         
-    return arr
+        root = self.heap[0]
+        self.heap[0] = self.heap.pop() # 将末尾元素移到根节点
+        self._heapify_down(0)
+        return root
 
-# 测试代码
+    def _heapify_down(self, i):
+        largest = i
+        left = self.left_child(i)
+        right = self.right_child(i)
+        n = len(self.heap)
+
+        if left < n and self.heap[left].priority > self.heap[largest].priority:
+            largest = left
+        if right < n and self.heap[right].priority > self.heap[largest].priority:
+            largest = right
+
+        if largest != i:
+            self.heap[i], self.heap[largest] = self.heap[largest], self.heap[i]
+            self._heapify_down(largest)
+
+# 3. 实际应用案例 (Application Example)
+def main():
+    print("=== IT Department Print Queue System ===")
+    printer_queue = MaxHeap()
+    
+    # 模拟接收各种不同优先级的打印任务
+    incoming_jobs = [
+        PrintJob("Intern_Report.pdf", 2),
+        PrintJob("CEO_Quarterly_Speech.docx", 10),  # 最高优先级
+        PrintJob("Daily_Log.txt", 1),
+        PrintJob("Financial_Data_Q1.xlsx", 8)
+    ]
+    
+    print("\n--- 1. Receiving Jobs (Building Max Heap) ---")
+    for job in incoming_jobs:
+        printer_queue.insert(job)
+        print(f"Added to queue: {job}")
+        
+    print("\n--- 2. Processing Jobs (Heap Sort Extraction) ---")
+    # 利用堆排序的逻辑，依次处理最高优先级的任务
+    while len(printer_queue.heap) > 0:
+        current_job = printer_queue.extract_max()
+        print(f"Printing... {current_job}")
+
 if __name__ == "__main__":
-    data = [10, 5, 3, 17, 1, 25, 8]
-    print(f"Original array: {data}")
-    heap_sort(data)
-    print(f"Sorted array:   {data}")
+    main()
